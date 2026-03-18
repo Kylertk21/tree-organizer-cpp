@@ -1,6 +1,7 @@
 #include "tree.hpp"
 #include <functional>
 #include <iostream>
+#include <raylib.h>
 #include <string>
 
 template <typename T>
@@ -8,29 +9,59 @@ template <typename T>
 std::vector<Node<T> *> nodes;
 std::string path = "/home/kyler/dev/raylib-projects/tree-organizer-cpp/";
 
+int leafindex = 0;
+
+void treeLayout(Node<std::string> *node, int depth) {
+  // Graphical Tree Layout on Raylib
+
+  if (!node)
+    return;
+
+  if (node->children.empty()) {
+    node->screenPos.x =
+        leafindex * 120 + 60; // screen position, space by 120 pixels
+    leafindex++;
+  } else {
+    for (auto *child : node->children) {
+      treeLayout(child, depth + 1); // recurse into children first
+    }
+
+    float first =
+        node->children.front()->screenPos.x; // put parent first (first element)
+    float last = node->children.back()->screenPos.x;
+    node->screenPos.x = (first + last) / 2.0f;
+  }
+  node->screenPos.y = depth * 100 + 60;
+}
+
+void drawTree(Node<std::string> *node) {
+  if (!node)
+    return;
+
+  // Draw lines to children first so they appear behind nodes
+  for (auto *child : node->children) {
+    DrawLineV(node->screenPos, child->screenPos, GRAY);
+    drawTree(child);
+  }
+
+  // Draw node
+  DrawCircleV(node->screenPos, 20, DARKBLUE);
+  DrawText(node->data.c_str(), node->screenPos.x - 20, node->screenPos.y - 8,
+           10, WHITE);
+}
+
 int main(void) {
 
-  Node<std::string> root("root node");
-  Node<std::string> child1("child 1");
-  Node<std::string> child2("child 2");
-  Node<std::string> gchild("grand child");
+  while (!WindowShouldClose()) {
+    BeginDrawing();
+    ClearBackground(WHITE);
 
-  root.addChild(&child1);
-  root.addChild(&child2);
-  child2.addChild(&gchild);
+    leafindex = 0;
+    treeLayout(&node, 0);
+    drawTree(&node);
 
-  createFile(root, "test", path + "test.txt");
-  createFile(child1, "test2", path + "test2.txt");
-  createFile(gchild, "test3", path + "test3.txt");
-
-  std::string output = loadNode(root);
-  std::cout << output << std::endl;
-
-  output = loadNode(child1);
-  std::cout << output << std::endl;
-
-  output = loadNode(gchild);
-  std::cout << output << std::endl;
+    EndDrawing();
+  }
 
   return 0;
 }

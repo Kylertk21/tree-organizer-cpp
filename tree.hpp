@@ -1,6 +1,7 @@
 #ifndef TREE_HPP
 #define TREE_HPP
 #pragma once
+#include "raylib.h"
 #include <string>
 #include <vector>
 
@@ -9,6 +10,7 @@ template <typename T>
 struct Node {
   std::string filepath;
   T data;
+  Vector2 screenPos;
   std::vector<Node<T> *> children;
 
   Node(T data) : data(data) {} // Constructor initializer
