@@ -1,0 +1,24 @@
+# Outline
+
+Generic tree structure for storing notes in a visual, hierarchical system
+Notes are added to nodes, nodes start at the root of the tree and are added to previous nodes based on 
+user-selected subject (i.e biology)
+
+Data structure will be a graph / Generic tree as there is no limit to leaf number and previous nodes
+should be accessible
+
+## Class
+
+    template T
+
+    struct Node {
+        T data
+        dynamic array<Node<T>*> children <-- Resizable array of pointers to other nodes
+
+        TreeNode(T data) : data(data) {} <-- constructor initializer
+
+        void addChild(Node<T>* child) {
+            children.push_back(child)
+        }
+    }
+
