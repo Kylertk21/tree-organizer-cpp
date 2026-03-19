@@ -19,7 +19,8 @@ struct Node {
   Vector2 screenPos;
   std::vector<Node<T> *> children;
 
-  Node(T data) : data(data) {} // Constructor initializer
+  Node(T data, std::string genre)
+      : data(data), genre(genre) {} // Constructor initializer
 
   void addChild(Node<T> *child) {
     child->parent = this;      // This node is the parent
@@ -44,5 +45,5 @@ void createFile(Node<std::string> &node, std::string input,
 void deleteFile(Node<std::string> &node);
 void treeLayout(Node<std::string> *node, int depth);
 void drawTree(Node<std::string> *node);
-
+void detachFromParent(Node<std::string> *root, Node<std::string> *target);
 #endif

@@ -9,6 +9,17 @@
 namespace fs = std::filesystem;
 int leafindex = 0;
 
+void detachFromParent(Node<std::string> *root,
+                      Node<std::string> *target) { // Detach node from parent
+  for (auto *child : root->children) {
+    auto &c = child->children;
+    c.erase(std::remove(c.begin(), c.end(), target), c.end());
+    detachFromParent(child, target); // Recurse through tree to remove parent
+  }
+  auto &c = root->children;
+  c.erase(std::remove(c.begin(), c.end(), target), c.end());
+}
+
 Node<std::string> *loadNode(Node<std::string> &node) {
   std::ifstream file(node.filepath);
   if (!file.is_open())
