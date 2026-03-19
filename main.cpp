@@ -17,6 +17,18 @@ void clickNode(Node<std::string> *node) {
   } else if (selected == node) {
     selected = nullptr; // deselect
   } else {
+
+    if (isAncestor(node, selected)) {
+      std::cout << "Cant move a node under its children!" << std::endl;
+      selected = nullptr;
+      return;
+    }
+
+    if (node == &root) {
+      std::cout << "Can't reparent root!" << std::en : endl;
+      selected = nullptr;
+      return;
+    }
     detachFromParent(&root, node);
     selected->addChild(node); // second click, attach node as child of selected
     selected = nullptr;
@@ -49,7 +61,7 @@ int main(void) {
   Node<std::string> gchild("gchild", "Child 3");
 
   createFile(root, "testing file testing file", path + "test.txt");
-  std::string content = *loadNode(root);
+  root = *loadNode(root);
 
   root.addChild(&child1);
   root.addChild(&child2);

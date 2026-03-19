@@ -46,4 +46,5 @@ void deleteFile(Node<std::string> &node);
 void treeLayout(Node<std::string> *node, int depth);
 void drawTree(Node<std::string> *node);
 void detachFromParent(Node<std::string> *root, Node<std::string> *target);
+bool isAncestor(Node<std::string> *ancestor, Node<std::string> *node);
 #endif

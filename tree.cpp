@@ -100,3 +100,17 @@ void drawTree(Node<std::string> *node) {
   DrawText(node->data.c_str(), node->screenPos.x + 10, node->screenPos.y + 5,
            10, WHITE);
 }
+
+// Return true if ancestor is above node in tree
+bool isAncestor(Node<std::string> *ancestor, Node<std::string> *node) {
+  if (!node)
+    return false;
+  if (node == ancestor)
+    return true;
+  for (auto *child : ancestor->children) {
+    if (isAncestor(child, node)) {
+      return true;
+    }
+  }
+  return false;
+}
