@@ -22,3 +22,8 @@ should be accessible
         }
     }
 
+## Logic Flow
+
+User creates a file in GUI, this file acts as the root of the tree
+User creates another file in the GUI or selects the parent and chooses "add child"
+If file is created separately, user chooses which node is the parent

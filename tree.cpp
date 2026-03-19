@@ -2,18 +2,21 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <raylib.h>
 #include <sstream>
 #include <string>
 
 namespace fs = std::filesystem;
+int leafindex = 0;
 
-std::string loadNode(const Node<std::string> &node) {
+Node<std::string> *loadNode(Node<std::string> &node) {
   std::ifstream file(node.filepath);
   if (!file.is_open())
-    return "file not found";
+    return nullptr;
   std::stringstream buffer;
   buffer << file.rdbuf();
-  return buffer.str();
+  node.data = buffer.str();
+  return &node;
 }
 
 void createFile(Node<std::string> &node, std::string input,
@@ -43,4 +46,46 @@ void deleteFile(Node<std::string> &node) {
   } catch (const fs::filesystem_error &ex) {
     std::cerr << "Filesystem Error: " << ex.what() << std::endl;
   }
+}
+
+void treeLayout(Node<std::string> *node, int depth) {
+  // Graphical Tree Layout on Raylib
+
+  if (!node)
+    return;
+
+  if (node->children.empty()) {
+    node->screenPos.x =
+        leafindex * 120 + 60; // screen position, space by 120 pixels
+    leafindex++;
+  } else {
+    for (auto *child : node->children) {
+      treeLayout(child,
+                 depth +
+                     1); // recurse into children first, add 1 layer of depth
+    }
+
+    float first =
+        node->children.front()->screenPos.x; // put parent first (first element)
+    float last = node->children.back()->screenPos.x;
+    node->screenPos.x = (first + last) / 2.0f;
+  }
+  node->screenPos.y = depth * 100 + 60;
+}
+
+void drawTree(Node<std::string> *node) {
+  if (!node)
+    return;
+
+  // Draw lines to children first so they appear behind nodes
+  for (auto *child : node->children) {
+    DrawLineV(node->screenPos, child->screenPos, GRAY);
+    drawTree(child);
+  }
+
+  // Draw node
+  float textWidth = MeasureText(node->data.c_str(), 10);
+  DrawRectangleV(node->screenPos, {textWidth + 20, 30}, DARKBLUE);
+  DrawText(node->data.c_str(), node->screenPos.x + 10, node->screenPos.y + 5,
+           10, WHITE);
 }
