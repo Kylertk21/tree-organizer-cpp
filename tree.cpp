@@ -5,9 +5,14 @@
 #include <raylib.h>
 #include <sstream>
 #include <string>
-
+Node<std::string> *selected = nullptr;
 namespace fs = std::filesystem;
 int leafindex = 0;
+int fontSize = 20;
+int textPaddingX = 10;
+int textPaddingY = 5;
+int nodePaddingX = 20;
+int nodePaddingY = 0;
 
 void detachFromParent(Node<std::string> *root,
                       Node<std::string> *target) { // Detach node from parent
@@ -85,6 +90,7 @@ void treeLayout(Node<std::string> *node, int depth) {
 }
 
 void drawTree(Node<std::string> *node) {
+
   if (!node)
     return;
 
@@ -95,10 +101,16 @@ void drawTree(Node<std::string> *node) {
   }
 
   // Draw node
-  float textWidth = MeasureText(node->data.c_str(), 10);
-  DrawRectangleV(node->screenPos, {textWidth + 20, 30}, DARKBLUE);
-  DrawText(node->data.c_str(), node->screenPos.x + 10, node->screenPos.y + 5,
-           10, WHITE);
+  float textWidth = MeasureText(node->data.c_str(), fontSize);
+  float w = textWidth + nodePaddingX;
+  float h = 30 + nodePaddingY;
+
+  Color fill =
+      (node == selected) ? ORANGE : DARKBLUE; // Highlight if node is selected
+
+  DrawRectangleV(node->screenPos, {w, h}, fill);
+  DrawText(node->data.c_str(), node->screenPos.x + textPaddingX,
+           node->screenPos.y + textPaddingY, fontSize, WHITE);
 }
 
 // Return true if ancestor is above node in tree

@@ -9,7 +9,6 @@ template <typename T>
 std::vector<Node<T> *> nodes;
 std::string path = "/home/kyler/dev/raylib-projects/tree-organizer-cpp/";
 Node<std::string> root("root", "Root");
-Node<std::string> *selected = nullptr;
 
 void clickNode(Node<std::string> *node) {
   if (selected == nullptr) {
@@ -25,7 +24,7 @@ void clickNode(Node<std::string> *node) {
     }
 
     if (node == &root) {
-      std::cout << "Can't reparent root!" << std::en : endl;
+      std::cout << "Can't reparent root!" << std::endl;
       selected = nullptr;
       return;
     }
@@ -39,12 +38,19 @@ Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse) {
   if (!node)
     return nullptr;
 
-  float dx = mouse.x - node->screenPos.x; // Check if within node square
-  float dy = mouse.y - node->screenPos.y;
-  if ((dx * dx + dy * dy) <
-      20 * 20) // distance = sqrt (dx*dx + dy*dy), 20*20 = sqrt
-    return node;
+  float textWidth = MeasureText(node->data.c_str(), fontSize);
+  float w = textWidth + nodePaddingX;
+  float h = 30 + nodePaddingY;
 
+  if (mouse.x >=
+          node->screenPos.x && // Can also use raylib's CheckCollisionPointRec
+      mouse.x <=
+          node->screenPos.x +
+              w && // Check that mouse is within screenpos + width and height
+      mouse.y >= node->screenPos.y &&
+      mouse.y <= node->screenPos.y + h) {
+    return node;
+  }
   for (auto *child : node->children) { // Recurse through tree to determine who
                                        // was clicked, depth first
     Node<std::string> *hit = getClicked(child, mouse);
@@ -66,8 +72,7 @@ int main(void) {
   root.addChild(&child1);
   root.addChild(&child2);
   child2.addChild(&gchild);
-
-  InitWindow(800, 600, "Tree Organizer");
+  InitWindow(1920, 800, "Tree Organizer");
 
   while (!WindowShouldClose()) {
     BeginDrawing();

@@ -8,6 +8,11 @@
 #include <vector>
 
 extern int leafindex;
+extern int fontSize;
+extern int textPaddingX;
+extern int textPaddingY;
+extern int nodePaddingX;
+extern int nodePaddingY;
 
 template <typename T>
 
@@ -38,7 +43,7 @@ struct Node {
     children.erase(*child);
   } // erase at child's addr
 };
-
+extern Node<std::string> *selected;
 Node<std::string> *loadNode(Node<std::string> &node);
 void createFile(Node<std::string> &node, std::string input,
                 const std::string path);
