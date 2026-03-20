@@ -101,7 +101,10 @@ void drawTree(Node<std::string> *node) {
   }
 
   // Draw node
-  float textWidth = MeasureText(node->data.c_str(), fontSize);
+
+  float textWidth = 0;
+  std::string text = node->data.empty() ? node->name : node->data;
+  textWidth = MeasureText(text.c_str(), fontSize);
   float w = textWidth + nodePaddingX;
   float h = 30 + nodePaddingY;
 
@@ -109,7 +112,7 @@ void drawTree(Node<std::string> *node) {
       (node == selected) ? ORANGE : DARKBLUE; // Highlight if node is selected
 
   DrawRectangleV(node->screenPos, {w, h}, fill);
-  DrawText(node->data.c_str(), node->screenPos.x + textPaddingX,
+  DrawText(text.c_str(), node->screenPos.x + textPaddingX,
            node->screenPos.y + textPaddingY, fontSize, WHITE);
 }
 

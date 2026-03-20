@@ -18,14 +18,13 @@ template <typename T>
 
 struct Node {
   std::string filepath;
-  std::string genre;
+  std::string name;
   Node<T> *parent = nullptr;
   T data;
   Vector2 screenPos;
   std::vector<Node<T> *> children;
 
-  Node(T data, std::string genre)
-      : data(data), genre(genre) {} // Constructor initializer
+  Node(std::string name) : name(name) {} // Constructor initializer
 
   void addChild(Node<T> *child) {
     child->parent = this;      // This node is the parent
