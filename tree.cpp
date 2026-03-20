@@ -5,6 +5,7 @@
 #include <raylib.h>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 Node<std::string> *selected = nullptr;
 Node<std::string> root("root");
 namespace fs = std::filesystem;
@@ -14,6 +15,9 @@ int textPaddingX = 10;
 int textPaddingY = 5;
 int nodePaddingX = 20;
 int nodePaddingY = 0;
+
+float menuWidth = 220;
+float menuHeight = 110;
 
 void detachFromParent(Node<std::string> *root,
                       Node<std::string> *target) { // Detach node from parent
@@ -65,11 +69,16 @@ void deleteFile(Node<std::string> &node) {
   }
 }
 
-void treeLayout(Node<std::string> *node, int depth) {
+void treeLayout(Node<std::string> *node, int depth,
+                std::unordered_set<Node<std::string> *> &visited) {
   // Graphical Tree Layout on Raylib
 
   if (!node)
     return;
+
+  if (visited.count(node))
+    return;
+  visited.insert(node);
 
   if (node->children.empty()) {
     node->screenPos.x =
@@ -77,9 +86,8 @@ void treeLayout(Node<std::string> *node, int depth) {
     leafindex++;
   } else {
     for (auto *child : node->children) {
-      treeLayout(child,
-                 depth +
-                     1); // recurse into children first, add 1 layer of depth
+      treeLayout(child, depth + 1,
+                 visited); // recurse into children first, add 1 layer of depth
     }
 
     float first =
@@ -88,6 +96,12 @@ void treeLayout(Node<std::string> *node, int depth) {
     node->screenPos.x = (first + last) / 2.0f;
   }
   node->screenPos.y = depth * 100 + 60;
+}
+
+void treeLayout(Node<std::string> *node,
+                int depth) { // Wrapper so caller doesnt manage set
+  std::unordered_set<Node<std::string> *> visited;
+  treeLayout(node, depth, visited);
 }
 
 void drawTree(Node<std::string> *node) {
@@ -155,11 +169,17 @@ void clickNode(Node<std::string> *node) {
   }
 }
 
-Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse) {
+Node<std::string> *
+getClicked(Node<std::string> *node, Vector2 mouse,
+           std::unordered_set<Node<std::string> *> &visited) {
 
-  std::string text = node->data.empty() ? node->name : node->data;
   if (!node)
     return nullptr;
+  if (visited.count(node))
+    return nullptr; // Already visited
+  visited.insert(node);
+
+  std::string text = node->data.empty() ? node->name : node->data;
 
   float textWidth = MeasureText(text.c_str(), fontSize);
   float w = textWidth + nodePaddingX;
@@ -176,9 +196,94 @@ Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse) {
   }
   for (auto *child : node->children) { // Recurse through tree to determine who
                                        // was clicked, depth first
-    Node<std::string> *hit = getClicked(child, mouse);
+    Node<std::string> *hit = getClicked(child, mouse, visited);
     if (hit)
       return hit;
   }
   return nullptr;
+}
+
+Node<std::string> *getClicked(Node<std::string> *node,
+                              Vector2 mouse) { // Wrapper
+  std::unordered_set<Node<std::string> *> visited;
+  return getClicked(node, mouse, visited);
+}
+
+void updateContextMenu(ContextMenu &menu,
+                       TextBox &dataInput) { // Context menu on right click
+  if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)) {
+    Node<std::string> *hit = getClicked(&root, GetMousePosition());
+    if (hit) {
+      menu.open = true;
+      menu.pos = GetMousePosition();
+      menu.target = hit;
+      dataInput.text = "";
+      dataInput.active = false;
+    } else {
+      menu.open = false;
+      menu.target = nullptr;
+    }
+  }
+
+  if (IsKeyPressed(KEY_ESCAPE)) {
+    menu.open = false;
+    menu.target = nullptr;
+    dataInput.active = false;
+  }
+}
+
+void drawTextBox(const TextBox &box) {
+  DrawRectangleRec(box.rect, WHITE); // Draw input background
+  DrawRectangleLinesEx(box.rect, 1,
+                       box.active ? ORANGE : DARKGRAY); // Draw border
+  DrawText(box.text.c_str(), box.rect.x + textPaddingX,
+           box.rect.y + box.rect.height / 2 - box.fontSize / 2, box.fontSize,
+           BLACK); // Draw text typed into box
+  if (box.active && ((int)(GetTime() * 2) % 2 ==
+                     0)) { // Blinking Cursor, blink twice per second
+    float cursorX =
+        box.rect.x + 5 + MeasureText(box.text.c_str(), box.fontSize);
+    DrawLine(cursorX + 10, box.rect.y + 4, cursorX + 10,
+             box.rect.y + box.rect.height - 4, BLACK);
+  }
+}
+
+void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
+  if (!menu.open || !menu.target)
+    return;
+
+  Rectangle menuRect = {menu.pos.x, menu.pos.y, menuWidth, menuHeight};
+
+  DrawRectangleRec(menuRect, ORANGE);
+  DrawRectangleLinesEx(menuRect, 1, DARKGRAY);
+
+  DrawText(TextFormat("Node %s", menu.target->name.c_str()), // Title (nodename)
+           menu.pos.x + 8, menu.pos.y + 8, 14, DARKGRAY);
+
+  DrawText("Note File: ", menu.pos.x + 8, menu.pos.y + 32, 12,
+           DARKGRAY); // Label
+
+  dataInput.rect = {menu.pos.x + 8, menu.pos.y + 50, menuWidth - 16,
+                    28}; // Input box
+  dataInput.active = true;
+  drawTextBox(dataInput);
+
+  Rectangle confirm = {menu.pos.x + 8, menu.pos.y + 86, menuWidth - 16,
+                       18}; // Confirm button
+  bool hovered = CheckCollisionPointRec(GetMousePosition(), confirm);
+  DrawRectangleRec(confirm, hovered ? DARKGREEN : RED);
+  DrawText("Confirm (Enter)", confirm.x + 6, confirm.y + 3, 10, WHITE);
+
+  bool confirmed = (IsKeyPressed(KEY_ENTER) && dataInput.active) ||
+                   (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered);
+
+  if (confirmed && !dataInput.text.empty()) {
+    menu.target->data = dataInput.text;
+    std::cout << "Set Data On: " << menu.target->name << ": " << dataInput.text
+              << std::endl;
+    menu.open = false;
+    menu.target = nullptr;
+    dataInput.text = "";
+    dataInput.active = false;
+  }
 }

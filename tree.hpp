@@ -51,6 +51,12 @@ struct TextBox {
   int fontSize = 20;
 };
 
+struct ContextMenu {
+  bool open = false;
+  Vector2 pos;
+  Node<std::string> *target = nullptr;
+};
+
 extern Node<std::string> *selected;
 extern Node<std::string> root;
 Node<std::string> *loadNode(Node<std::string> &node);
@@ -64,5 +70,9 @@ bool isAncestor(Node<std::string> *ancestor, Node<std::string> *node);
 
 void clickNode(Node<std::string> *node);
 Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse);
+
+void drawTextBox(const TextBox &box);
+void updateContextMenu(ContextMenu &menu, TextBox &dataInput);
+void drawContextMenu(ContextMenu &menu, TextBox &dataInput);
 
 #endif

@@ -1,9 +1,7 @@
 #include "tree.hpp"
-#include <functional>
+
 #include <iostream>
-#include <memory>
 #include <raylib.h>
-#include <string>
 
 std::vector<Node<std::string> *> nodes;
 std::string path = "/home/kyler/dev/raylib-projects/tree-organizer-cpp/";
@@ -56,38 +54,37 @@ void inputText(TextBox &box) {
     box.text.pop_back();
 }
 
-void drawTextBox(const TextBox &box) {
-  DrawRectangleRec(box.rect, WHITE); // Draw input background
-  DrawRectangleLinesEx(box.rect, 1,
-                       box.active ? ORANGE : DARKGRAY); // Draw border
-  DrawText(box.text.c_str(), box.rect.x + textPaddingX,
-           box.rect.y + box.rect.height / 2 - box.fontSize / 2, box.fontSize,
-           BLACK); // Draw text typed into box
-  if (box.active && ((int)(GetTime() * 2) % 2 ==
-                     0)) { // Blinking Cursor, blink twice per second
-    float cursorX =
-        box.rect.x + 5 + MeasureText(box.text.c_str(), box.fontSize);
-    DrawLine(cursorX + 10, box.rect.y + 4, cursorX + 10,
-             box.rect.y + box.rect.height - 4, BLACK);
-  }
-}
-
 int main(void) {
 
   TextBox input = {
       {10, 10, 200, 30}, "", false, 20}; // L X W X H, text, active, fontsize
 
+  TextBox dataInput = {{0, 0, 0, 0}, "", false, 14}; // Context menu input
+
+  ContextMenu contextMenu;
+
   InitWindow(screenWidth, screenHeight, "Tree Organizer");
 
   while (!WindowShouldClose()) {
     inputText(input);
+    inputText(dataInput);
 
     BeginDrawing();
     ClearBackground(WHITE);
-    drawTextBox(input);
+
     leafindex = 0;
-    treeLayout(&root, 0);
+    treeLayout(&root, 0); // Layout
     drawTree(&root);
+    drawTextBox(input);
+
+    updateContextMenu(contextMenu, dataInput);
+
+    if (!contextMenu.open &&
+        IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) { // Only open if closed
+      Node<std::string> *hit = getClicked(&root, GetMousePosition());
+      if (hit)
+        clickNode(hit);
+    }
 
     if (IsKeyPressed(KEY_ENTER) && input.active) {
       std::cout << "Input: " << input.text << std::endl;
@@ -95,14 +92,7 @@ int main(void) {
       input.text = "";
     }
 
-    if (IsMouseButtonPressed(
-            MOUSE_LEFT_BUTTON)) { // Click a node, recurse through tree to
-                                  // determine who was clicked
-      Node<std::string> *hit = getClicked(&root, GetMousePosition());
-      if (hit)
-        clickNode(hit);
-    }
-
+    drawContextMenu(contextMenu, dataInput);
     EndDrawing();
   }
 
