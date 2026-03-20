@@ -52,6 +52,7 @@ struct TextBox {
 };
 
 extern Node<std::string> *selected;
+extern Node<std::string> root;
 Node<std::string> *loadNode(Node<std::string> &node);
 void createFile(Node<std::string> &node, std::string input,
                 const std::string path);
@@ -60,4 +61,8 @@ void treeLayout(Node<std::string> *node, int depth);
 void drawTree(Node<std::string> *node);
 void detachFromParent(Node<std::string> *root, Node<std::string> *target);
 bool isAncestor(Node<std::string> *ancestor, Node<std::string> *node);
+
+void clickNode(Node<std::string> *node);
+Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse);
+
 #endif

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 Node<std::string> *selected = nullptr;
+Node<std::string> root("root");
 namespace fs = std::filesystem;
 int leafindex = 0;
 int fontSize = 20;
@@ -128,4 +129,56 @@ bool isAncestor(Node<std::string> *ancestor, Node<std::string> *node) {
     }
   }
   return false;
+}
+
+void clickNode(Node<std::string> *node) {
+  if (selected == nullptr) {
+    selected = node; // first click, select as parent
+  } else if (selected == node) {
+    selected = nullptr; // deselect
+  } else {
+
+    if (isAncestor(node, selected)) {
+      std::cout << "Cant move a node under its children!" << std::endl;
+      selected = nullptr;
+      return;
+    }
+
+    if (node == &root) {
+      std::cout << "Can't reparent root!" << std::endl;
+      selected = nullptr;
+      return;
+    }
+    detachFromParent(&root, node);
+    selected->addChild(node); // second click, attach node as child of selected
+    selected = nullptr;
+  }
+}
+
+Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse) {
+
+  std::string text = node->data.empty() ? node->name : node->data;
+  if (!node)
+    return nullptr;
+
+  float textWidth = MeasureText(text.c_str(), fontSize);
+  float w = textWidth + nodePaddingX;
+  float h = 30 + nodePaddingY;
+
+  if (mouse.x >=
+          node->screenPos.x && // Can also use raylib's CheckCollisionPointRec
+      mouse.x <=
+          node->screenPos.x +
+              w && // Check that mouse is within screenpos + width and height
+      mouse.y >= node->screenPos.y &&
+      mouse.y <= node->screenPos.y + h) {
+    return node;
+  }
+  for (auto *child : node->children) { // Recurse through tree to determine who
+                                       // was clicked, depth first
+    Node<std::string> *hit = getClicked(child, mouse);
+    if (hit)
+      return hit;
+  }
+  return nullptr;
 }
