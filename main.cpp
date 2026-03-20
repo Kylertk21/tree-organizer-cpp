@@ -13,6 +13,43 @@ Node<std::string> root("root");
 const int screenWidth = 1920;
 const int screenHeight = 1080;
 
+void inputText(TextBox &box) {
+  if (IsMouseButtonPressed(
+          MOUSE_LEFT_BUTTON)) { // Check if box has been clicked
+    box.active = CheckCollisionPointRec(GetMousePosition(), box.rect);
+  }
+
+  if (!box.active)
+    return;
+
+  int c = GetCharPressed();  // Get input char
+  while (c > 0) {            // while not null terminated
+    if (c >= 32 && c <= 125) // Only printable ASCII
+      box.text += (char)c;
+    c = GetCharPressed();
+  }
+
+  if (IsKeyPressed(KEY_BACKSPACE) &&
+      !box.text.empty()) // Backspace, if box isnt empty
+    box.text.pop_back();
+}
+
+void drawTextBox(const TextBox &box) {
+  DrawRectangleRec(box.rect, WHITE); // Draw input background
+  DrawRectangleLinesEx(box.rect, 1,
+                       box.active ? ORANGE : DARKGRAY); // Draw border
+  DrawText(box.text.c_str(), box.rect.x + textPaddingX,
+           box.rect.y + box.rect.height / 2 - box.fontSize / 2, box.fontSize,
+           BLACK); // Draw text typed into box
+  if (box.active && ((int)(GetTime() * 2) % 2 ==
+                     0)) { // Blinking Cursor, blink twice per second
+    float cursorX =
+        box.rect.x + 5 + MeasureText(box.text.c_str(), box.fontSize);
+    DrawLine(cursorX + 10, box.rect.y + 4, cursorX + 10,
+             box.rect.y + box.rect.height - 4, BLACK);
+  }
+}
+
 void clickNode(Node<std::string> *node) {
   if (selected == nullptr) {
     selected = node; // first click, select as parent
@@ -67,24 +104,25 @@ Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse) {
 
 int main(void) {
 
-  Node<std::string> child1("test text");
-  Node<std::string> child2("test text");
-  Node<std::string> gchild("test text");
+  TextBox input = {
+      {10, 10, 200, 30}, "", false, 20}; // L X W X H, text, active, fontsize
 
-  createFile(root, "testing file testing file", path + "test.txt");
-  root = *loadNode(root);
-
-  root.addChild(&child1);
-  root.addChild(&child2);
-  child2.addChild(&gchild);
   InitWindow(screenWidth, screenHeight, "Tree Organizer");
 
   while (!WindowShouldClose()) {
+    inputText(input);
+
     BeginDrawing();
     ClearBackground(WHITE);
+    drawTextBox(input);
     leafindex = 0;
     treeLayout(&root, 0);
     drawTree(&root);
+
+    if (IsKeyPressed(KEY_ENTER) && input.active) {
+      std::cout << "Input: " << input.text << std::endl;
+      input.text = "";
+    }
 
     if (IsMouseButtonPressed(
             MOUSE_LEFT_BUTTON)) { // Click a node, recurse through tree to

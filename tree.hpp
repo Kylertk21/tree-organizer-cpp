@@ -29,7 +29,8 @@ struct Node {
   void addChild(Node<T> *child) {
     child->parent = this;      // This node is the parent
     children.push_back(child); // Adds a child
-  }
+  };
+
   void detachChild() { // Detaches child from parent
     if (!parent)
       return;
@@ -42,6 +43,14 @@ struct Node {
     children.erase(*child);
   } // erase at child's addr
 };
+
+struct TextBox {
+  Rectangle rect;
+  std::string text;
+  bool active = false;
+  int fontSize = 20;
+};
+
 extern Node<std::string> *selected;
 Node<std::string> *loadNode(Node<std::string> &node);
 void createFile(Node<std::string> &node, std::string input,
