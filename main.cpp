@@ -4,10 +4,6 @@
 #include <raylib.h>
 
 std::vector<Node<std::string> *> nodes;
-std::string path = "/home/kyler/dev/raylib-projects/tree-organizer-cpp/";
-
-const int screenWidth = 1920;
-const int screenHeight = 1080;
 
 void createNode(std::string input) {
   if (input.empty())
@@ -56,8 +52,10 @@ void inputText(TextBox &box) {
 
 int main(void) {
 
-  TextBox input = {
-      {10, 10, 200, 30}, "", false, 20}; // L X W X H, text, active, fontsize
+  TextBox input = {{10, screenHeight - 40, 200, 30},
+                   "",
+                   false,
+                   20}; // L X W X H, text, active, fontsize
 
   TextBox dataInput = {{0, 0, 0, 0}, "", false, 14}; // Context menu input
 

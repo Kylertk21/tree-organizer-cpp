@@ -13,6 +13,9 @@ extern int textPaddingX;
 extern int textPaddingY;
 extern int nodePaddingX;
 extern int nodePaddingY;
+extern const int screenWidth;
+extern const int screenHeight;
+extern const std::string path;
 
 template <typename T>
 

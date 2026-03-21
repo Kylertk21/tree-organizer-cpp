@@ -1,4 +1,6 @@
 #include "tree.hpp"
+#include <cerrno>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -18,6 +20,11 @@ int nodePaddingY = 0;
 
 float menuWidth = 220;
 float menuHeight = 110;
+
+const int screenWidth = 1920;
+const int screenHeight = 800;
+
+const std::string path = "/home/kyler/tree-organizer-cpp/files/";
 
 void detachFromParent(Node<std::string> *root,
                       Node<std::string> *target) { // Detach node from parent
@@ -42,18 +49,20 @@ Node<std::string> *loadNode(Node<std::string> &node) {
 
 void createFile(Node<std::string> &node, std::string input,
                 const std::string path) {
-  if (node.filepath.empty()) {
-    node.filepath = path;
-  } else {
-    std::cout << "File Exists in Node!" << std::endl;
-    return;
-  }
+  std::cout << "Attempting to create file at: " << path << std::endl;
+
+  node.filepath = path;
+
   std::ofstream file(node.filepath);
   if (!file.is_open()) {
-    std::cerr << "Failed to Create File!" << std::endl;
+    std::cerr << "Failed to create file: " << path << std::endl;
+    std::cerr << "Error: " << strerror(errno) << std::endl; // exact OS error
+    return;
   }
+
   file << input;
   file.close();
+  std::cout << "File created successfully: " << path << std::endl;
 }
 
 void deleteFile(Node<std::string> &node) {
@@ -81,8 +90,8 @@ void treeLayout(Node<std::string> *node, int depth,
   visited.insert(node);
 
   if (node->children.empty()) {
-    node->screenPos.x =
-        leafindex * 120 + 60; // screen position, space by 120 pixels
+    node->screenPos.x = leafindex * 120 +
+                        screenWidth / 2; // screen position, space by 120 pixels
     leafindex++;
   } else {
     for (auto *child : node->children) {
@@ -278,7 +287,9 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
                    (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered);
 
   if (confirmed && !dataInput.text.empty()) {
+    std::string nodePath = path + menu.target->name + ".txt";
     menu.target->data = dataInput.text;
+    createFile(*menu.target, dataInput.text, nodePath);
     std::cout << "Set Data On: " << menu.target->name << ": " << dataInput.text
               << std::endl;
     menu.open = false;
