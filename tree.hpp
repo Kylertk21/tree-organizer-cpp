@@ -6,6 +6,7 @@
 #include "raylib.h"
 #include <string>
 #include <vector>
+#define BOYGRAY (Color){50, 50, 59, 255}
 
 extern int leafindex;
 extern int fontSize;
@@ -26,6 +27,7 @@ struct Node {
   T data;
   Vector2 screenPos;
   std::vector<Node<T> *> children;
+  bool pinned = false;
 
   Node(std::string name) : name(name) {} // Constructor initializer
 
@@ -47,6 +49,8 @@ struct Node {
   } // erase at child's addr
 };
 
+extern std::vector<Node<std::string> *> nodes;
+
 struct TextBox {
   Rectangle rect;
   std::string text;
@@ -63,6 +67,9 @@ struct ContextMenu {
 extern Node<std::string> *selected;
 extern Node<std::string> root;
 Node<std::string> *loadNode(Node<std::string> &node);
+extern Node<std::string> *drag;
+extern Vector2 dragOffset;
+extern bool isDragging;
 void createFile(Node<std::string> &node, std::string input,
                 const std::string path);
 void deleteFile(Node<std::string> &node);

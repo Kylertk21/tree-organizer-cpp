@@ -2,8 +2,11 @@
 
 #include <iostream>
 #include <raylib.h>
+#include <string>
 
-std::vector<Node<std::string> *> nodes;
+Node<std::string> *drag = nullptr;
+Vector2 dragOffset = {0, 0};
+bool isDragging = false;
 
 void createNode(std::string input) {
   if (input.empty())
@@ -66,20 +69,59 @@ int main(void) {
   while (!WindowShouldClose()) {
     inputText(input);
     inputText(dataInput);
+    Vector2 mouse = GetMousePosition();
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) { // start drag
+      Node<std::string> *hit = getClicked(&root, mouse);
+      if (hit) {
+        drag = hit;
+        dragOffset = {mouse.x - hit->screenPos.x, mouse.y - hit->screenPos.y};
+      }
+    }
+
+    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON) &&
+        drag) { // if mouse button is held
+      float dx =
+          mouse.x -
+          (drag->screenPos.x +
+           dragOffset.x); // update node position with a calculated drag offset
+      float dy = mouse.y - (drag->screenPos.y +
+                            dragOffset.y); // mouse.x = 300, screenpos.x = 150,
+                                           // dragoffset = 150, dx = 150
+      if (!isDragging && (dx * dx + dy * dy) > 25) {
+        isDragging = true;
+      }
+      if (isDragging) {
+        drag->screenPos.x = mouse.x - dragOffset.x;
+        drag->screenPos.y = mouse.y - dragOffset.y;
+      }
+    }
+
+    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
+      if (isDragging && drag) { // keep the node at its position
+                                // after dragging (dont recalc layout)
+        drag->pinned = true;
+      } else if (!isDragging && drag) {
+        clickNode(drag);
+      }
+      drag = nullptr;
+      isDragging = false;
+    }
 
     BeginDrawing();
-    ClearBackground(WHITE);
+    ClearBackground(BOYGRAY);
 
     leafindex = 0;
     treeLayout(&root, 0); // Layout
     drawTree(&root);
+
     drawTextBox(input);
 
     updateContextMenu(contextMenu, dataInput);
 
     if (!contextMenu.open &&
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) { // Only open if closed
-      Node<std::string> *hit = getClicked(&root, GetMousePosition());
+      Node<std::string> *hit = getClicked(&root, mouse);
       if (hit)
         clickNode(hit);
     }
