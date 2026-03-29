@@ -20,7 +20,7 @@ int nodePaddingX = 20;
 int nodePaddingY = 0;
 
 float menuWidth = 220;
-float menuHeight = 110;
+float menuHeight = 220;
 
 const int screenWidth = 1920;
 const int screenHeight = 800;
@@ -320,20 +320,24 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
   dataInput.active = true;
   drawTextBox(dataInput);
 
-  Rectangle confirmCreate = {menu.pos.x + 8, menu.pos.y + 86, menuWidth / 2,
-                             18}; // Confirm button
-  Rectangle deleteNodeRect = {menu.pos.x + (menuWidth / 2), menu.pos.y + 86,
-                              menuWidth / 2, 18};
-  bool hovered = CheckCollisionPointRec(GetMousePosition(), confirmCreate);
-  DrawRectangleRec(confirmCreate, hovered ? DARKGREEN : GREEN);
-  DrawText("Confirm (Enter)", confirmCreate.x + 6, confirmCreate.y + 3, 10,
-           WHITE);
+  Rectangle changeColor = {menu.pos.x + 8, menu.pos.y + 90, menuWidth - 16, 18};
 
-  bool deleteHovered =
-      CheckCollisionPointRec(GetMousePosition(), deleteNodeRect);
-  DrawRectangleRec(deleteNodeRect, deleteHovered ? DARKPURPLE : RED);
-  DrawText("Delete Note (Enter)", deleteNodeRect.x + 6, deleteNodeRect.y + 3,
-           10, WHITE);
+  Rectangle confirmCreate = {menu.pos.x + 8, menu.pos.y + 108,
+                             menuWidth / 2 - 8, 18}; // Confirm button
+  Rectangle deleteNodeRect = {menu.pos.x + (menuWidth / 2), menu.pos.y + 108,
+                              menuWidth / 2 - 8, 18};
+  bool hovered = CheckCollisionPointRec(GetMousePosition(), changeColor);
+  DrawRectangleRec(changeColor, hovered ? DARKBROWN : BROWN);
+  DrawText("Change Color", changeColor.x + 6, changeColor.y + 3, 10, WHITE);
+
+  hovered = CheckCollisionPointRec(GetMousePosition(), confirmCreate);
+  DrawRectangleRec(confirmCreate, hovered ? DARKGREEN : GREEN);
+  DrawText("Confirm", confirmCreate.x + 6, confirmCreate.y + 3, 10, WHITE);
+
+  hovered = CheckCollisionPointRec(GetMousePosition(), deleteNodeRect);
+  DrawRectangleRec(deleteNodeRect, hovered ? DARKPURPLE : RED);
+  DrawText("Delete Note", deleteNodeRect.x + 6, deleteNodeRect.y + 3, 10,
+           WHITE);
 
   bool confirmed = (IsKeyPressed(KEY_ENTER) && dataInput.active) ||
                    (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered);
@@ -350,7 +354,7 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
     dataInput.active = false;
   }
 
-  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && deleteHovered) {
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered) {
     deleteNode(menu.target);
     menu.open = false;
     menu.target = nullptr;

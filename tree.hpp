@@ -14,6 +14,12 @@ extern int textPaddingX;
 extern int textPaddingY;
 extern int nodePaddingX;
 extern int nodePaddingY;
+
+extern int colorR;
+extern int colorG;
+extern int colorB;
+extern int colorT;
+
 extern const int screenWidth;
 extern const int screenHeight;
 extern const std::string path;
