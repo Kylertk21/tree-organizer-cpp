@@ -15,6 +15,9 @@ extern int textPaddingY;
 extern int nodePaddingX;
 extern int nodePaddingY;
 
+extern bool colorPickerOpen;
+extern Vector2 colorPickerPos;
+
 extern int colorR;
 extern int colorG;
 extern int colorB;
@@ -34,6 +37,7 @@ struct Node {
   Vector2 screenPos;
   std::vector<Node<T> *> children;
   bool pinned = false;
+  Color color = {0, 0, 0, 0};
 
   Node(std::string name) : name(name) {} // Constructor initializer
 
@@ -70,10 +74,11 @@ struct ContextMenu {
   Node<std::string> *target = nullptr;
 };
 
-extern Node<std::string> *selected;
 extern Node<std::string> root;
 Node<std::string> *loadNode(Node<std::string> &node);
+extern Node<std::string> *selected;
 extern Node<std::string> *drag;
+extern Node<std::string> *colorTarget;
 extern Vector2 dragOffset;
 extern bool isDragging;
 void createFile(Node<std::string> &node, std::string input,
@@ -90,5 +95,7 @@ Node<std::string> *getClicked(Node<std::string> *node, Vector2 mouse);
 void drawTextBox(const TextBox &box);
 void updateContextMenu(ContextMenu &menu, TextBox &dataInput);
 void drawContextMenu(ContextMenu &menu, TextBox &dataInput);
+void changeNodeColor(Color color);
+void drawColorPicker();
 
 #endif

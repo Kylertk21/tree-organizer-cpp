@@ -119,11 +119,12 @@ int main(void) {
 
     updateContextMenu(contextMenu, dataInput);
 
-    if (!contextMenu.open &&
+    if (!contextMenu.open && !colorPickerOpen &&
         IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) { // Only open if closed
       Node<std::string> *hit = getClicked(&root, mouse);
-      if (hit)
+      if (hit) {
         clickNode(hit);
+      }
     }
 
     if (IsKeyPressed(KEY_ENTER) && input.active) {
@@ -133,6 +134,7 @@ int main(void) {
     }
 
     drawContextMenu(contextMenu, dataInput);
+    drawColorPicker();
     EndDrawing();
   }
 

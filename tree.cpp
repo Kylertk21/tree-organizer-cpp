@@ -8,8 +8,13 @@
 #include <sstream>
 #include <string>
 #include <unordered_set>
+
 Node<std::string> *selected = nullptr;
 Node<std::string> root("root");
+Node<std::string> *colorTarget = nullptr;
+bool colorPickerOpen = false;
+Vector2 colorPickerPos = {0, 0};
+
 std::vector<Node<std::string> *> nodes;
 namespace fs = std::filesystem;
 int leafindex = 0;
@@ -175,12 +180,19 @@ void drawTree(Node<std::string> *node) {
   float w = textWidth + nodePaddingX;
   float h = 30 + nodePaddingY;
 
+  int compareBlank = ColorToInt(BLANK);
+  int nodeCtoInt = ColorToInt(node->color);
+
+  if (nodeCtoInt == compareBlank) {
+    node->color = WHITE;
+  }
+
   Color fill =
-      (node == selected) ? ORANGE : DARKBLUE; // Highlight if node is selected
+      (node == selected) ? ORANGE : BLANK; // Highlight if node is selected
 
   DrawRectangleV(node->screenPos, {w, h}, fill);
   DrawText(text.c_str(), node->screenPos.x + textPaddingX,
-           node->screenPos.y + textPaddingY, fontSize, WHITE);
+           node->screenPos.y + textPaddingY, fontSize, node->color);
 }
 
 // Return true if ancestor is above node in tree
@@ -326,21 +338,23 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
                              menuWidth / 2 - 8, 18}; // Confirm button
   Rectangle deleteNodeRect = {menu.pos.x + (menuWidth / 2), menu.pos.y + 108,
                               menuWidth / 2 - 8, 18};
-  bool hovered = CheckCollisionPointRec(GetMousePosition(), changeColor);
-  DrawRectangleRec(changeColor, hovered ? DARKBROWN : BROWN);
+  bool colorHovered = CheckCollisionPointRec(GetMousePosition(), changeColor);
+  DrawRectangleRec(changeColor, colorHovered ? DARKBROWN : BROWN);
   DrawText("Change Color", changeColor.x + 6, changeColor.y + 3, 10, WHITE);
 
-  hovered = CheckCollisionPointRec(GetMousePosition(), confirmCreate);
-  DrawRectangleRec(confirmCreate, hovered ? DARKGREEN : GREEN);
+  bool confirmHovered =
+      CheckCollisionPointRec(GetMousePosition(), confirmCreate);
+  DrawRectangleRec(confirmCreate, confirmHovered ? DARKGREEN : GREEN);
   DrawText("Confirm", confirmCreate.x + 6, confirmCreate.y + 3, 10, WHITE);
 
-  hovered = CheckCollisionPointRec(GetMousePosition(), deleteNodeRect);
-  DrawRectangleRec(deleteNodeRect, hovered ? DARKPURPLE : RED);
-  DrawText("Delete Note", deleteNodeRect.x + 6, deleteNodeRect.y + 3, 10,
+  bool deleteHovered =
+      CheckCollisionPointRec(GetMousePosition(), deleteNodeRect);
+  DrawRectangleRec(deleteNodeRect, deleteHovered ? DARKPURPLE : RED);
+  DrawText("Delete Node", deleteNodeRect.x + 6, deleteNodeRect.y + 3, 10,
            WHITE);
 
   bool confirmed = (IsKeyPressed(KEY_ENTER) && dataInput.active) ||
-                   (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered);
+                   (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && confirmHovered);
 
   if (confirmed && !dataInput.text.empty()) {
     std::string nodePath = path + menu.target->name + ".txt";
@@ -354,11 +368,72 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
     dataInput.active = false;
   }
 
-  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hovered) {
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && deleteHovered) {
     deleteNode(menu.target);
     menu.open = false;
     menu.target = nullptr;
     dataInput.text = "";
     dataInput.active = false;
+  }
+
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && colorHovered) {
+    colorPickerOpen = true;
+    colorTarget = menu.target;
+    colorPickerPos = menu.pos;
+    menu.open = false;
+  }
+}
+
+void drawColorPicker() {
+  if (!colorPickerOpen || !colorTarget) {
+    return;
+  }
+
+  float colorPickerHeight = 100;
+  float boxWidth = 60;
+  float boxHeight = 30;
+  float colorPickerWidth = (boxWidth * 3) + 12;
+
+  Rectangle colorPicker = {colorPickerPos.x, colorPickerPos.y, colorPickerWidth,
+                           colorPickerHeight};
+
+  Rectangle colorRed = {colorPickerPos.x + 6, colorPickerPos.y + 30, boxWidth,
+                        boxHeight};
+  Rectangle colorBlue = {colorPickerPos.x + boxWidth + 6, colorPickerPos.y + 30,
+                         boxWidth, boxHeight};
+  Rectangle colorGreen = {colorPickerPos.x + (boxWidth * 2) + 6,
+                          colorPickerPos.y + 30, boxWidth, boxHeight};
+
+  DrawRectangleRec(colorPicker, YELLOW);
+  DrawText("Change Node Color", colorPickerPos.x + 6, colorPickerPos.y + 12, 15,
+           BLACK);
+
+  bool hoverRed = (CheckCollisionPointRec(GetMousePosition(), colorRed));
+  DrawRectangleRec(colorRed, hoverRed ? MAROON : RED);
+  DrawText("RED", colorRed.x + (boxWidth / 3) - 5,
+           colorRed.y + (boxHeight / 3) - 3, 15, BLACK);
+
+  bool hoverBlue = (CheckCollisionPointRec(GetMousePosition(), colorBlue));
+  DrawRectangleRec(colorBlue, hoverBlue ? DARKBLUE : BLUE);
+  DrawText("BLUE", colorBlue.x + (boxWidth / 3) - 10,
+           colorBlue.y + (boxHeight / 3) - 3, 15, BLACK);
+
+  bool hoverGreen = (CheckCollisionPointRec(GetMousePosition(), colorGreen));
+  DrawRectangleRec(colorGreen, hoverGreen ? DARKGREEN : GREEN);
+  DrawText("GREEN", colorGreen.x + (boxWidth / 3) - 15,
+           colorGreen.y + (boxHeight / 3) - 3, 15, BLACK);
+
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hoverRed) {
+    colorTarget->color = RED;
+  } else if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hoverBlue) {
+    colorTarget->color = BLUE;
+  } else if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hoverGreen) {
+    colorTarget->color = GREEN;
+  }
+
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+      !CheckCollisionPointRec(GetMousePosition(), colorPicker)) {
+    colorPickerOpen = false;
+    colorTarget = nullptr;
   }
 }
