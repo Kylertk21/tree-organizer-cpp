@@ -139,6 +139,7 @@ void treeLayout(Node<std::string> *node, int depth,
   if (node->children.empty()) {
     node->screenPos.x = leafindex * 120 +
                         screenWidth / 2; // screen position, space by 120 pixels
+    node->rect.x = node->screenPos.x;
 
     leafindex++;
   } else {
@@ -153,6 +154,7 @@ void treeLayout(Node<std::string> *node, int depth,
     node->screenPos.x = (first + last) / 2.0f;
   }
   node->screenPos.y = depth * 100 + 60;
+  node->rect.y = node->screenPos.y;
 }
 
 void treeLayout(Node<std::string> *node,
@@ -179,6 +181,8 @@ void drawTree(Node<std::string> *node) {
   textWidth = MeasureText(text.c_str(), fontSize);
   float w = textWidth + nodePaddingX;
   float h = 30 + nodePaddingY;
+  node->rect.width = w;
+  node->rect.height = h;
 
   int compareBlank = ColorToInt(BLANK);
   int nodeCtoInt = ColorToInt(node->color);
@@ -190,7 +194,7 @@ void drawTree(Node<std::string> *node) {
   Color fill =
       (node == selected) ? ORANGE : BLANK; // Highlight if node is selected
 
-  DrawRectangleV(node->screenPos, {w, h}, fill);
+  DrawRectangleV(node->screenPos, {node->rect.width, node->rect.height}, fill);
   DrawText(text.c_str(), node->screenPos.x + textPaddingX,
            node->screenPos.y + textPaddingY, fontSize, node->color);
 }
@@ -212,7 +216,8 @@ bool isAncestor(Node<std::string> *ancestor, Node<std::string> *node) {
 void clickNode(Node<std::string> *node) {
   if (selected == nullptr) {
     selected = node; // first click, select as parent
-  } else if (selected == node) {
+  } else if (selected == node ||
+             !CheckCollisionPointRec(GetMousePosition(), node->rect)) {
     selected = nullptr; // deselect
   } else {
 
@@ -251,11 +256,11 @@ getClicked(Node<std::string> *node, Vector2 mouse,
 
   if (mouse.x >=
           node->screenPos.x && // Can also use raylib's CheckCollisionPointRec
-      mouse.x <=
-          node->screenPos.x +
-              w && // Check that mouse is within screenpos + width and height
+      mouse.x <= node->screenPos.x +
+                     node->rect.width && // Check that mouse is within screenpos
+                                         // + width and height
       mouse.y >= node->screenPos.y &&
-      mouse.y <= node->screenPos.y + h) {
+      mouse.y <= node->screenPos.y + node->rect.height) {
     return node;
   }
   for (auto *child : node->children) { // Recurse through tree to determine who
