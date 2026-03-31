@@ -220,22 +220,27 @@ void clickNode(Node<std::string> *node) {
              !CheckCollisionPointRec(GetMousePosition(), node->rect)) {
     selected = nullptr; // deselect
   } else {
-
-    if (isAncestor(node, selected)) {
-      std::cout << "Cant move a node under its children!" << std::endl;
-      selected = nullptr;
-      return;
-    }
-
-    if (node == &root) {
-      std::cout << "Can't reparent root!" << std::endl;
-      selected = nullptr;
-      return;
-    }
-    detachFromParent(&root, node);
-    selected->addChild(node); // second click, attach node as child of selected
+    DrawText("Invalid Selection!", node->screenPos.x + 20,
+             node->screenPos.y + 20, 20, RED);
     selected = nullptr;
   }
+}
+
+void reParentNode(Node<std::string> *reparent, Node<std::string> *target) {
+  if (isAncestor(reparent, target)) {
+    DrawText("Can't move a node under its children!",
+             reparent->screenPos.y + 20, reparent->screenPos.x + 20, 20, RED);
+    return;
+  }
+
+  if (reparent == &root) {
+    DrawText("Can't reparent root!", reparent->screenPos.x + 20,
+             reparent->screenPos.y + 20, 20, RED);
+    return;
+  }
+
+  detachFromParent(&root, reparent);
+  target->addChild(reparent);
 }
 
 Node<std::string> *
@@ -337,12 +342,20 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
   dataInput.active = true;
   drawTextBox(dataInput);
 
-  Rectangle changeColor = {menu.pos.x + 8, menu.pos.y + 90, menuWidth - 16, 18};
+  Rectangle reParent = {menu.pos.x + 8, menu.pos.y + 80, menuWidth - 16, 18};
 
-  Rectangle confirmCreate = {menu.pos.x + 8, menu.pos.y + 108,
+  Rectangle changeColor = {menu.pos.x + 8, menu.pos.y + 100, menuWidth - 16,
+                           18};
+
+  Rectangle confirmCreate = {menu.pos.x + 8, menu.pos.y + 125,
                              menuWidth / 2 - 8, 18}; // Confirm button
-  Rectangle deleteNodeRect = {menu.pos.x + (menuWidth / 2), menu.pos.y + 108,
+  Rectangle deleteNodeRect = {menu.pos.x + (menuWidth / 2), menu.pos.y + 125,
                               menuWidth / 2 - 8, 18};
+
+  bool reParentHovered = CheckCollisionPointRec(GetMousePosition(), reParent);
+  DrawRectangleRec(reParent, BLUE);
+  DrawText("Reparent Node", reParent.x + 6, reParent.y + 3, 10, WHITE);
+
   bool colorHovered = CheckCollisionPointRec(GetMousePosition(), changeColor);
   DrawRectangleRec(changeColor, colorHovered ? DARKBROWN : BROWN);
   DrawText("Change Color", changeColor.x + 6, changeColor.y + 3, 10, WHITE);
@@ -379,6 +392,15 @@ void drawContextMenu(ContextMenu &menu, TextBox &dataInput) {
     menu.target = nullptr;
     dataInput.text = "";
     dataInput.active = false;
+  }
+
+  if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && reParentHovered) {
+    Vector2 mouse = GetMousePosition();
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+      Node<std::string> *reparented = getClicked(&root, mouse);
+      clickNode(reparented);
+      reParentNode(reparented, menu.target);
+    }
   }
 
   if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && colorHovered) {

@@ -99,5 +99,6 @@ void updateContextMenu(ContextMenu &menu, TextBox &dataInput);
 void drawContextMenu(ContextMenu &menu, TextBox &dataInput);
 void changeNodeColor(Color color);
 void drawColorPicker();
+void reParentNode(Node<std::string> *reparent, Node<std::string> *target);
 
 #endif
