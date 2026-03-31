@@ -166,7 +166,19 @@ void drawTree(Node<std::string> *node) {
   if (!node)
     return;
 
+  // Draw lines to children first so they appear behind nodes
+  for (auto *child : node->children) {
+    DrawLineV(node->screenPos, child->screenPos, GRAY);
+    drawTree(child);
+  }
+
   // Draw node
+
+  float textWidth = 0;
+  std::string text = node->data.empty() ? node->name : node->data;
+  textWidth = MeasureText(text.c_str(), fontSize);
+  float w = textWidth + nodePaddingX;
+  float h = 30 + nodePaddingY;
 
   int compareBlank = ColorToInt(BLANK);
   int nodeCtoInt = ColorToInt(node->color);
@@ -177,18 +189,6 @@ void drawTree(Node<std::string> *node) {
 
   Color fill =
       (node == selected) ? ORANGE : BLANK; // Highlight if node is selected
-
-  float textWidth = 0;
-  std::string text = node->data.empty() ? node->name : node->data;
-  textWidth = MeasureText(text.c_str(), fontSize);
-  float w = textWidth + nodePaddingX;
-  float h = 30 + nodePaddingY;
-
-  // Draw lines to children first so they appear behind nodes
-  for (auto *child : node->children) {
-    DrawLineV(node->screenPos, child->screenPos, node->color);
-    drawTree(child);
-  }
 
   DrawRectangleV(node->screenPos, {w, h}, fill);
   DrawText(text.c_str(), node->screenPos.x + textPaddingX,
